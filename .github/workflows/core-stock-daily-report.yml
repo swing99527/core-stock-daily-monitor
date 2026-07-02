@@ -122,3 +122,14 @@ jobs:
             git commit -m "Publish core stock daily dashboard $(date +%Y-%m-%d)"
             git push origin HEAD:gh-pages
           fi
+
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          gh api "repos/${GITHUB_REPOSITORY}/pages/builds" -X POST
+          status=$?
+          if [ "${status}" -ne 0 ]; then
+            echo "::warning::Unable to request Pages build; verify repository Pages source is gh-pages /."
+          fi
