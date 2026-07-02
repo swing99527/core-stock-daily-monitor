@@ -96,7 +96,7 @@ jobs:
             --report-exit-code "${REPORT_EXIT_CODE:-999}" \
             --site-dir public
 
-      - name: Publish Pages branch
+      - name: Publish docs site
         env:
           PAGES_PAT: ${{ secrets.PAGES_PAT }}
         run: |
@@ -111,21 +111,15 @@ jobs:
           cp -R public/. "${publish_dir}/"
           touch "${publish_dir}/.nojekyll"
 
-          git fetch origin gh-pages --depth=1 || true
-          if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
-            git switch --detach origin/gh-pages
-          else
-            git switch --orphan gh-pages
-          fi
-
-          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          cp -R "${publish_dir}/". .
-          git add .
+          rm -rf docs
+          mkdir -p docs
+          cp -R "${publish_dir}/". docs/
+          git add docs
           if git diff --cached --quiet; then
             echo "No Pages changes to publish."
           else
             git commit -m "Publish core stock daily dashboard $(date +%Y-%m-%d)"
-            git push origin HEAD:gh-pages
+            git push origin HEAD:main
           fi
 
       - name: Request Pages build

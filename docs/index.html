@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>核心股票日度监控看板 20260701</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d9dee8;
+      --red: #d43838;
+      --green: #16805a;
+      --blue: #2563eb;
+      --amber: #b7791f;
+      --purple: #6d28d9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.5;
+    }
+    .page { max-width: 1320px; margin: 0 auto; padding: 28px 28px 44px; }
+    header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 22px; }
+    h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.2; }
+    .sub { color: var(--muted); font-size: 14px; }
+    .source { text-align: right; color: var(--muted); font-size: 13px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+    .kpi span { display: block; color: var(--muted); font-size: 13px; }
+    .kpi strong { display: block; font-size: 22px; margin-top: 4px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 18px 0 22px; }
+    .stock-card { background: var(--panel); border: 1px solid var(--line); border-top: 5px solid var(--muted); border-radius: 8px; padding: 16px; min-height: 330px; }
+    .stock-card.strategy-up { border-top-color: var(--red); }
+    .stock-card.strategy-repair { border-top-color: var(--amber); }
+    .stock-card.strategy-risk { border-top-color: var(--green); }
+    .stock-card.strategy-neutral { border-top-color: var(--blue); }
+    .card-head { display: flex; justify-content: space-between; gap: 12px; }
+    .stock-name { font-size: 21px; font-weight: 750; }
+    .symbol { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .price-block { text-align: right; }
+    .price { font-size: 24px; font-weight: 760; }
+    .change { font-size: 15px; font-weight: 700; }
+    .up { color: var(--red); }
+    .down { color: var(--green); }
+    .flat { color: var(--muted); }
+    .strategy-pill, .tag { display: inline-block; margin: 12px 0 8px; padding: 4px 9px; border-radius: 6px; font-size: 13px; font-weight: 700; background: #eef2ff; color: #334155; }
+    .tag { margin: 0; white-space: nowrap; }
+    .tag.strategy-up, .strategy-pill.strategy-up { background: #fee2e2; color: #991b1b; }
+    .tag.strategy-repair { background: #fef3c7; color: #92400e; }
+    .tag.strategy-risk { background: #dcfce7; color: #166534; }
+    .tag.strategy-neutral { background: #dbeafe; color: #1d4ed8; }
+    .sparkline { width: 100%; height: 54px; margin: 8px 0 12px; background: #f8fafc; border: 1px solid #edf1f7; border-radius: 6px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+    .metric-grid div { border: 1px solid #edf1f7; border-radius: 6px; padding: 8px; }
+    .metric-grid span { display: block; color: var(--muted); font-size: 12px; }
+    .metric-grid strong { font-size: 15px; }
+    .mini-title { font-size: 13px; color: var(--muted); margin-top: 10px; }
+    .strategy-text { margin: 4px 0 10px; font-size: 14px; }
+    .news-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { display: inline-block; border: 1px solid #e5e7eb; background: #f8fafc; border-radius: 6px; padding: 3px 7px; color: #475569; font-size: 12px; max-width: 100%; }
+    section.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; margin-top: 16px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border-bottom: 1px solid #e5e7eb; padding: 11px 10px; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-weight: 700; background: #f8fafc; }
+    td span { color: var(--muted); font-size: 12px; }
+    .detail-row { display: grid; grid-template-columns: 260px 1fr; gap: 18px; padding: 14px 0; border-top: 1px solid #e5e7eb; }
+    .detail-row:first-of-type { border-top: 0; }
+    .detail-row h3 { margin: 0 0 4px; font-size: 18px; }
+    .detail-row h3 span { color: var(--muted); font-size: 13px; }
+    .detail-row p { margin: 0; color: var(--muted); }
+    .detail-row ul { margin: 0; padding-left: 18px; }
+    .footer { color: var(--muted); font-size: 13px; margin-top: 18px; }
+    @media (max-width: 1100px) {
+      .card-grid, .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      header { flex-direction: column; }
+      .source { text-align: left; }
+    }
+    @media (max-width: 720px) {
+      .page { padding: 18px; }
+      .card-grid, .kpi-row, .detail-row { grid-template-columns: 1fr; }
+      table { font-size: 13px; }
+      th, td { padding: 9px 7px; }
+    }
+  </style>
+</head>
+<body>
+  <style>.publish-status-banner{position:sticky;top:0;z-index:20;padding:10px 18px;background:#fff7ed;border-bottom:1px solid #fed7aa;color:#7c2d12;font:14px/1.45 -apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}.publish-status-banner a{color:#9a3412;font-weight:700}</style><div class="publish-status-banner">本次自动化未生成 20260703 实时报表，当前页面展示上一份有效看板。 详情见 <a href="failure.md">failure.md</a>。</div>
+  <main class="page">
+    <header>
+      <div>
+        <h1>核心股票日度监控看板</h1>
+        <div class="sub">报告日 20260701 · 数据截至交易日 2026-07-01</div>
+      </div>
+      <div class="source">生成时间 2026-07-01 20:14:29 CST<br>数据来源：Longbridge Securities</div>
+    </header>
+
+    <div class="kpi-row">
+      <div class="kpi"><span>今日最大异动</span><strong>立讯 -5.91%</strong></div>
+      <div class="kpi"><span>防守/资金负向</span><strong>3 只</strong></div>
+      <div class="kpi"><span>监控股票</span><strong>5 只</strong></div>
+      <div class="kpi"><span>报告定位</span><strong>明日策略</strong></div>
+    </div>
+
+    <div class="card-grid">
+      
+            <section class="stock-card strategy-neutral">
+              <div class="card-head">
+                <div>
+                  <div class="stock-name">东鹏</div>
+                  <div class="symbol">605499.SH · 软饮料 / 功能饮料</div>
+                </div>
+                <div class="price-block">
+                  <div class="price">128.53</div>
+                  <div class="change up">+4.13%</div>
+                </div>
+              </div>
+              <div class="strategy-pill">中性观察</div>
+              <svg class="sparkline" viewBox="0 0 220 52" role="img" aria-label="近30日走势"><polyline points="0.0,7.5 7.6,9.4 15.2,12.2 22.8,11.7 30.3,15.4 37.9,18.0 45.5,16.0 53.1,14.5 60.7,4.0 68.3,6.9 75.9,12.9 83.4,17.7 91.0,23.0 98.6,21.1 106.2,24.3 113.8,25.7 121.4,24.4 129.0,25.7 136.6,29.5 144.1,33.2 151.7,32.6 159.3,37.7 166.9,37.7 174.5,42.4 182.1,44.7 189.7,46.1 197.2,48.0 204.8,36.2 212.4,34.7 220.0,29.3" fill="none" stroke="#16805a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <div class="metric-grid">
+                <div><span>MA10</span><strong>119.44</strong></div>
+                <div><span>MA20</span><strong>126.57</strong></div>
+                <div><span>资金</span><strong>-8149.46万</strong></div>
+                <div><span>成交额</span><strong>13.02亿</strong></div>
+              </div>
+              <div class="mini-title">明日主线</div>
+              <p class="strategy-text">等待方向选择，重点看收盘位置相对MA10/MA20和资金流是否同步。</p>
+              <div class="news-row"><span class="chip">其他 · 837 亿富豪不喝自家产品？东鹏饮料对造谣者 “重拳出击”</span><span class="chip">行业 · 港股消费板块走弱，农夫山泉跌超 7%，东鹏饮料跌超 6%，蜜雪集团、</span><span class="chip">舆情 · 一天市值上涨 70 亿，磨平一周跌幅！东鹏饮料 A 股 10CM 涨</span></div>
+            </section>
+            
+            <section class="stock-card strategy-neutral">
+              <div class="card-head">
+                <div>
+                  <div class="stock-name">美的</div>
+                  <div class="symbol">000333.SZ · 白电 / 机器人 / 工业自动化</div>
+                </div>
+                <div class="price-block">
+                  <div class="price">77.40</div>
+                  <div class="change up">+2.48%</div>
+                </div>
+              </div>
+              <div class="strategy-pill">中性观察</div>
+              <svg class="sparkline" viewBox="0 0 220 52" role="img" aria-label="近30日走势"><polyline points="0.0,23.1 7.6,23.1 15.2,29.2 22.8,31.5 30.3,32.8 37.9,30.4 45.5,35.8 53.1,26.4 60.7,22.1 68.3,17.7 75.9,17.6 83.4,18.6 91.0,22.2 98.6,16.4 106.2,18.9 113.8,11.2 121.4,4.0 129.0,14.5 136.6,26.0 144.1,35.8 151.7,34.5 159.3,40.5 166.9,39.2 174.5,40.2 182.1,47.4 189.7,48.0 197.2,37.8 204.8,25.7 212.4,34.3 220.0,25.0" fill="none" stroke="#16805a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <div class="metric-grid">
+                <div><span>MA10</span><strong>74.94</strong></div>
+                <div><span>MA20</span><strong>76.83</strong></div>
+                <div><span>资金</span><strong>-1.14亿</strong></div>
+                <div><span>成交额</span><strong>38.10亿</strong></div>
+              </div>
+              <div class="mini-title">明日主线</div>
+              <p class="strategy-text">等待方向选择，重点看收盘位置相对MA10/MA20和资金流是否同步。</p>
+              <div class="news-row"><span class="chip">资本动作 · 美的集团 7 月 1 日斥资约 1.51 亿元回购 199.39 万</span><span class="chip">公告 · 美的集团向港交所提交了关于股份回购并注销的次日披露申报</span><span class="chip">其他 · 最高溢价 6 倍，中国空调在欧洲卖爆了</span></div>
+            </section>
+            
+            <section class="stock-card strategy-risk">
+              <div class="card-head">
+                <div>
+                  <div class="stock-name">立讯</div>
+                  <div class="symbol">002475.SZ · 消费电子 / 汽车电子 / AI硬件链</div>
+                </div>
+                <div class="price-block">
+                  <div class="price">66.24</div>
+                  <div class="change down">-5.91%</div>
+                </div>
+              </div>
+              <div class="strategy-pill">防守等待</div>
+              <svg class="sparkline" viewBox="0 0 220 52" role="img" aria-label="近30日走势"><polyline points="0.0,23.4 7.6,32.0 15.2,14.3 22.8,5.4 30.3,14.1 37.9,17.5 45.5,12.8 53.1,10.9 60.7,20.9 68.3,8.1 75.9,5.0 83.4,5.8 91.0,28.5 98.6,38.7 106.2,26.3 113.8,41.2 121.4,44.8 129.0,48.0 136.6,30.9 144.1,34.4 151.7,34.1 159.3,24.0 166.9,29.9 174.5,26.2 182.1,4.0 189.7,6.5 197.2,31.5 204.8,42.0 212.4,22.1 220.0,38.3" fill="none" stroke="#16805a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <div class="metric-grid">
+                <div><span>MA10</span><strong>69.44</strong></div>
+                <div><span>MA20</span><strong>68.87</strong></div>
+                <div><span>资金</span><strong>-21.96亿</strong></div>
+                <div><span>成交额</span><strong>141.48亿</strong></div>
+              </div>
+              <div class="mini-title">明日主线</div>
+              <p class="strategy-text">不急于判断见底，先看是否止跌并收回MA10；若继续放量下破低点，维持风险优先。</p>
+              <div class="news-row"><span class="chip">资本动作 · 立讯精密：已回购 1766.54 万股，使用资金总额 10 亿元</span><span class="chip">其他 · 立讯精密：立讯转债转股价格调整为 55.86 元/股</span><span class="chip">评级 · 立讯精密启动 H 股招股，高盛大幅上调目标价</span></div>
+            </section>
+            
+            <section class="stock-card strategy-repair">
+              <div class="card-head">
+                <div>
+                  <div class="stock-name">福耀</div>
+                  <div class="symbol">600660.SH · 汽车玻璃 / 全球汽零</div>
+                </div>
+                <div class="price-block">
+                  <div class="price">50.00</div>
+                  <div class="change down">-0.87%</div>
+                </div>
+              </div>
+              <div class="strategy-pill">修复确认</div>
+              <svg class="sparkline" viewBox="0 0 220 52" role="img" aria-label="近30日走势"><polyline points="0.0,9.9 7.6,9.6 15.2,4.0 22.8,12.7 30.3,14.8 37.9,19.3 45.5,23.9 53.1,19.8 60.7,20.9 68.3,10.2 75.9,12.4 83.4,14.7 91.0,14.1 98.6,16.8 106.2,15.3 113.8,17.5 121.4,21.3 129.0,21.7 136.6,21.3 144.1,32.0 151.7,31.8 159.3,36.2 166.9,35.6 174.5,40.5 182.1,47.3 189.7,48.0 197.2,33.3 204.8,22.9 212.4,33.3 220.0,35.9" fill="none" stroke="#16805a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <div class="metric-grid">
+                <div><span>MA10</span><strong>49.91</strong></div>
+                <div><span>MA20</span><strong>51.38</strong></div>
+                <div><span>资金</span><strong>1107.48万</strong></div>
+                <div><span>成交额</span><strong>5.57亿</strong></div>
+              </div>
+              <div class="mini-title">明日主线</div>
+              <p class="strategy-text">核心看反弹能否从事件修复升级为趋势修复；先看MA20压力，回踩不破MA10才算健康。</p>
+              <div class="news-row"><span class="chip">行业 · 汽车零部件 ETF 易方达（159565）涨 3.23%，规模同类第</span><span class="chip">其他 · 《大手成交》腾讯等 2 家公司上午 9:05 市前大手交易</span></div>
+            </section>
+            
+            <section class="stock-card strategy-neutral">
+              <div class="card-head">
+                <div>
+                  <div class="stock-name">联泰</div>
+                  <div class="symbol">603797.SH · 环保水务 / 污水处理</div>
+                </div>
+                <div class="price-block">
+                  <div class="price">3.91</div>
+                  <div class="change up">+4.27%</div>
+                </div>
+              </div>
+              <div class="strategy-pill">中性观察</div>
+              <svg class="sparkline" viewBox="0 0 220 52" role="img" aria-label="近30日走势"><polyline points="0.0,4.0 7.6,9.3 15.2,5.8 22.8,10.2 30.3,12.4 37.9,20.9 45.5,20.0 53.1,21.3 60.7,11.6 68.3,14.7 75.9,22.7 83.4,27.1 91.0,24.9 98.6,28.4 106.2,28.4 113.8,28.4 121.4,31.6 129.0,28.4 136.6,28.4 144.1,31.1 151.7,36.0 159.3,37.3 166.9,36.4 174.5,33.3 182.1,40.0 189.7,42.7 197.2,45.8 204.8,44.0 212.4,48.0 220.0,40.9" fill="none" stroke="#16805a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <div class="metric-grid">
+                <div><span>MA10</span><strong>3.92</strong></div>
+                <div><span>MA20</span><strong>4.06</strong></div>
+                <div><span>资金</span><strong>332.14万</strong></div>
+                <div><span>成交额</span><strong>2763.32万</strong></div>
+              </div>
+              <div class="mini-title">明日主线</div>
+              <p class="strategy-text">等待方向选择，重点看收盘位置相对MA10/MA20和资金流是否同步。</p>
+              <div class="news-row"><span class="chip">其他 · 联泰环保新设数字科技公司 含 AI 相关业务</span><span class="chip">业绩 · 联泰环保：一季度净利润 4824.44 万元 同比下降 10.5%</span><span class="chip">行业 · 环保行业跟踪周报：2026 年政府工作报告加快推动全面绿色转型；伟明</span></div>
+            </section>
+            
+    </div>
+
+    <section class="panel">
+      <h2>明日策略矩阵</h2>
+      <table>
+        <thead>
+          <tr><th>股票</th><th>策略</th><th>突破确认</th><th>回踩观察</th><th>失效条件</th></tr>
+        </thead>
+        <tbody>
+          
+            <tr>
+              <td><strong>东鹏</strong><br><span>605499.SH</span></td>
+              <td><span class="tag strategy-neutral">中性观察</span></td>
+              <td>放量突破今日高点 130.67，强势延续概率提高。</td>
+              <td>回踩 MA10 119.44 附近不破，且成交缩量，可视为健康回踩。</td>
+              <td>跌破今日低点 122.22 且资金继续流出，则明日策略失效，转为防守。</td>
+            </tr>
+            
+            <tr>
+              <td><strong>美的</strong><br><span>000333.SZ</span></td>
+              <td><span class="tag strategy-neutral">中性观察</span></td>
+              <td>放量突破今日高点 77.60，强势延续概率提高。</td>
+              <td>回踩 MA10 74.94 附近不破，且成交缩量，可视为健康回踩。</td>
+              <td>跌破今日低点 73.62 且资金继续流出，则明日策略失效，转为防守。</td>
+            </tr>
+            
+            <tr>
+              <td><strong>立讯</strong><br><span>002475.SZ</span></td>
+              <td><span class="tag strategy-risk">防守等待</span></td>
+              <td>放量站上 MA20 68.87，才视为趋势修复增强。</td>
+              <td>回踩 MA10 69.44 附近不破，且成交缩量，可视为健康回踩。</td>
+              <td>跌破今日低点 65.50 且资金继续流出，则明日策略失效，转为防守。</td>
+            </tr>
+            
+            <tr>
+              <td><strong>福耀</strong><br><span>600660.SH</span></td>
+              <td><span class="tag strategy-repair">修复确认</span></td>
+              <td>放量站上 MA20 51.38，才视为趋势修复增强。</td>
+              <td>回踩 MA10 49.91 附近不破，且成交缩量，可视为健康回踩。</td>
+              <td>跌破今日低点 49.21 且资金继续流出，则明日策略失效，转为防守。</td>
+            </tr>
+            
+            <tr>
+              <td><strong>联泰</strong><br><span>603797.SH</span></td>
+              <td><span class="tag strategy-neutral">中性观察</span></td>
+              <td>放量站上 MA20 4.06，才视为趋势修复增强。</td>
+              <td>回踩 MA10 3.92 附近不破，且成交缩量，可视为健康回踩。</td>
+              <td>跌破今日低点 3.73 且资金继续流出，则明日策略失效，转为防守。</td>
+            </tr>
+            
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>单股证据摘要</h2>
+      
+            <section class="detail-row">
+              <div>
+                <h3>东鹏饮料 <span>605499.SH</span></h3>
+                <p>品牌快消，渠道与单品扩张驱动</p>
+              </div>
+              <ul>
+                <li>价格：收盘 128.53，开 123.43，高 130.67，低 122.22</li>
+                <li>趋势：MA5 119.52，MA10 119.44，MA20 126.57，RSI14 46.05</li>
+                <li>估值：PE 20.11，PB 4.61，市值 943.67亿</li>
+                <li>策略：等待方向选择，重点看收盘位置相对MA10/MA20和资金流是否同步。</li>
+              </ul>
+            </section>
+            
+            <section class="detail-row">
+              <div>
+                <h3>美的集团 <span>000333.SZ</span></h3>
+                <p>成熟现金牛叠加产业升级平台</p>
+              </div>
+              <ul>
+                <li>价格：收盘 77.40，开 76.01，高 77.60，低 73.62</li>
+                <li>趋势：MA5 75.56，MA10 74.94，MA20 76.83，RSI14 42.86</li>
+                <li>估值：PE 13.33，PB 2.54，市值 5892.80亿</li>
+                <li>策略：等待方向选择，重点看收盘位置相对MA10/MA20和资金流是否同步。</li>
+              </ul>
+            </section>
+            
+            <section class="detail-row">
+              <div>
+                <h3>立讯精密 <span>002475.SZ</span></h3>
+                <p>大客户制造平台，订单和新品周期驱动</p>
+              </div>
+              <ul>
+                <li>价格：收盘 66.24，开 70.40，高 70.77，低 65.50</li>
+                <li>趋势：MA5 68.87，MA10 69.44，MA20 68.87，RSI14 50.99</li>
+                <li>估值：PE 28.16，PB 5.49，市值 4847.61亿</li>
+                <li>策略：不急于判断见底，先看是否止跌并收回MA10；若继续放量下破低点，维持风险优先。</li>
+              </ul>
+            </section>
+            
+            <section class="detail-row">
+              <div>
+                <h3>福耀玻璃 <span>600660.SH</span></h3>
+                <p>全球制造龙头，汽车产量与产品升级驱动</p>
+              </div>
+              <ul>
+                <li>价格：收盘 50.00，开 49.67，高 50.72，低 49.21</li>
+                <li>趋势：MA5 50.21，MA10 49.91，MA20 51.38，RSI14 37.00</li>
+                <li>估值：PE 14.51，PB 3.33，市值 1304.87亿</li>
+                <li>策略：核心看反弹能否从事件修复升级为趋势修复；先看MA20压力，回踩不破MA10才算健康。</li>
+              </ul>
+            </section>
+            
+            <section class="detail-row">
+              <div>
+                <h3>联泰环保 <span>603797.SH</span></h3>
+                <p>区域环保运营平台，项目回款与资本结构驱动</p>
+              </div>
+              <ul>
+                <li>价格：收盘 3.91，开 3.73，高 3.95，低 3.73</li>
+                <li>趋势：MA5 3.83，MA10 3.92，MA20 4.06，RSI14 36.00</li>
+                <li>估值：PE 18.32，PB 0.67，市值 22.55亿</li>
+                <li>策略：等待方向选择，重点看收盘位置相对MA10/MA20和资金流是否同步。</li>
+              </ul>
+            </section>
+            
+    </section>
+
+    <div class="footer">原始 JSON：/Users/chenshangwei/Documents/Obsidian Vault/2-🔬 Areas/stack/financial-research/data/core-four/20260701。本报告只做研究监控，不构成投资建议。</div>
+  </main>
+</body>
+</html>
