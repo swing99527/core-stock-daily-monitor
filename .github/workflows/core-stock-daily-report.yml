@@ -113,7 +113,7 @@ jobs:
             git switch --orphan gh-pages
           fi
 
-          git rm -rf . >/dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -R "${publish_dir}/". .
           git add .
           if git diff --cached --quiet; then
