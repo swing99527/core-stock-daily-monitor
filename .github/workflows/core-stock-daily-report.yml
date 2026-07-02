@@ -8,8 +8,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: core-stock-daily-report
@@ -98,21 +96,29 @@ jobs:
             --report-exit-code "${REPORT_EXIT_CODE:-999}" \
             --site-dir public
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+      - name: Publish Pages branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
+          publish_dir="$(mktemp -d)"
+          cp -R public/. "${publish_dir}/"
+          touch "${publish_dir}/.nojekyll"
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          git fetch origin gh-pages --depth=1 || true
+          if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+            git switch --detach origin/gh-pages
+          else
+            git switch --orphan gh-pages
+          fi
+
+          git rm -rf . >/dev/null 2>&1 || true
+          cp -R "${publish_dir}/". .
+          git add .
+          if git diff --cached --quiet; then
+            echo "No Pages changes to publish."
+          else
+            git commit -m "Publish core stock daily dashboard $(date +%Y-%m-%d)"
+            git push origin HEAD:gh-pages
+          fi

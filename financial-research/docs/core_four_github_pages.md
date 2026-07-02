@@ -1,6 +1,6 @@
 # 核心股票日报 GitHub Actions / Pages 发布
 
-这个工作流把 `financial-research/scripts/core_four_daily_report.py` 作为唯一生成入口，每个工作日下午 `17:40 Asia/Shanghai` 自动运行，并把 `latest_core_four_daily_dashboard.html` 发布为 GitHub Pages 首页。
+这个工作流把 `financial-research/scripts/core_four_daily_report.py` 作为唯一生成入口，每个工作日下午 `17:40 Asia/Shanghai` 自动运行，并把 `latest_core_four_daily_dashboard.html` 发布到 `gh-pages` 分支作为 GitHub Pages 首页。
 
 ## GitHub 配置
 
@@ -11,8 +11,9 @@
 base64 < ~/.longbridge/openapi/cli-auth
 ```
 
-3. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> GitHub Actions`。
-4. 手动运行一次 `Core stock daily report` workflow，确认 Pages URL 可访问。
+3. 手动运行一次 `Core stock daily report` workflow，让它创建并更新 `gh-pages` 分支。
+4. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> Deploy from a branch`，分支选 `gh-pages`，目录选 `/ (root)`。
+5. 确认 Pages URL 可访问。
 
 ## 失败回退
 
