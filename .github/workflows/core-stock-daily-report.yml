@@ -97,10 +97,15 @@ jobs:
             --site-dir public
 
       - name: Publish Pages branch
+        env:
+          PAGES_PAT: ${{ secrets.PAGES_PAT }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "${PAGES_PAT}" ]; then
+            git remote set-url origin "https://x-access-token:${PAGES_PAT}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
 
           publish_dir="$(mktemp -d)"
           cp -R public/. "${publish_dir}/"
@@ -125,8 +130,12 @@ jobs:
 
       - name: Request Pages build
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PAGES_PAT }}
         run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::Missing PAGES_PAT; skipping explicit Pages build request."
+            exit 0
+          fi
           set +e
           gh api "repos/${GITHUB_REPOSITORY}/pages/builds" -X POST
           status=$?
