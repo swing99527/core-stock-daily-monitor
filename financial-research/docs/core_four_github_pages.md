@@ -2,6 +2,8 @@
 
 这个工作流把 `financial-research/scripts/core_four_daily_report.py` 作为唯一生成入口，每个工作日下午 `17:40 Asia/Shanghai` 自动运行，并把 `latest_core_four_daily_dashboard.html` 发布到仓库根目录的 `docs/` 作为 GitHub Pages 首页。
 
+成功生成实时报表时，workflow 会把日报输出和 `docs/` 站点放在同一次提交里推回 `main`，避免连续 push 触发多次 GitHub Pages deployment。
+
 ## GitHub 配置
 
 1. 在 GitHub 仓库的 `Settings -> Secrets and variables -> Actions` 新增 secret：`LONGBRIDGE_CLI_AUTH_B64`。

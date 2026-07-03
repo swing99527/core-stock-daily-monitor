@@ -68,25 +68,15 @@ jobs:
             exit "${status}"
           fi
 
-      - name: Persist successful report outputs
+      - name: Stage successful report outputs
         if: steps.report.outputs.exit_code == '0'
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
             financial-research/reports/*_core_four_daily_report.md \
             financial-research/reports/*_core_four_daily_dashboard.html \
             financial-research/reports/latest_core_four_daily_report.md \
             financial-research/reports/latest_core_four_daily_dashboard.html
-          if git diff --cached --quiet; then
-            echo "No report changes to commit."
-          else
-            git commit -m "Update core stock daily report $(date +%Y-%m-%d)"
-            if ! git push; then
-              echo "::warning::Failed to push generated report outputs; Pages will still deploy the current artifact."
-            fi
-          fi
 
       - name: Prepare Pages site
         run: |
@@ -118,6 +108,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No Pages changes to publish."
           else
-            git commit -m "Publish core stock daily dashboard $(date +%Y-%m-%d)"
+            git commit -m "Publish core stock daily report $(date +%Y-%m-%d)"
             git push origin HEAD:main
           fi
