@@ -61,10 +61,19 @@ jobs:
         run: |
           set -euo pipefail
           git add \
+            financial-research/history/core_four_daily.sqlite3 \
             financial-research/reports/*_core_four_daily_report.md \
             financial-research/reports/*_core_four_daily_dashboard.html \
             financial-research/reports/latest_core_four_daily_report.md \
             financial-research/reports/latest_core_four_daily_dashboard.html
+
+      - name: Stage history database
+        if: steps.report.outputs.exit_code != '0'
+        run: |
+          set -euo pipefail
+          if [ -f financial-research/history/core_four_daily.sqlite3 ]; then
+            git add financial-research/history/core_four_daily.sqlite3
+          fi
 
       - name: Prepare Pages site
         run: |

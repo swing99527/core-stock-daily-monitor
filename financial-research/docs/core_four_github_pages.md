@@ -4,6 +4,8 @@
 
 workflow 也会把发布后的站点快照写入仓库根目录的 `docs/`，方便审计和本地查看。成功生成实时报表时，日报输出和 `docs/` 站点会放在同一次提交里推回 `main`，避免连续 push 触发多次 GitHub Pages deployment。
 
+历史数据写入 `financial-research/history/core_four_daily.sqlite3`，包括运行批次、单股每日快照、日 K 明细和 K 线分析历史。字段设计见 `financial-research/docs/core_four_history_storage.md`。
+
 ## GitHub 配置
 
 1. 在已登录 Longbridge CLI 的 Mac 上注册仓库级 self-hosted runner。

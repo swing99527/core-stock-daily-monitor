@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -94,6 +95,7 @@ class CoreFourDailyReportTests(unittest.TestCase):
             summary_path.write_text(json.dumps([summary_item], ensure_ascii=False), encoding="utf-8")
             data_dir = tmp / "data"
             report_dir = tmp / "reports"
+            history_db = tmp / "history.sqlite3"
 
             argv = [
                 "core_four_daily_report.py",
@@ -105,6 +107,8 @@ class CoreFourDailyReportTests(unittest.TestCase):
                 str(data_dir),
                 "--report-dir",
                 str(report_dir),
+                "--history-db",
+                str(history_db),
             ]
             with mock.patch.object(sys, "argv", argv):
                 result = MODULE.main()
@@ -112,6 +116,37 @@ class CoreFourDailyReportTests(unittest.TestCase):
             self.assertEqual(result, 0)
             self.assertTrue((report_dir / "20260701_core_four_daily_report.md").exists())
             self.assertTrue((report_dir / "latest_core_four_daily_dashboard.html").exists())
+            self.assertTrue(history_db.exists())
+            with sqlite3.connect(history_db) as conn:
+                run_count = conn.execute("select count(*) from report_runs").fetchone()[0]
+                snapshot_count = conn.execute("select count(*) from stock_daily_snapshots").fetchone()[0]
+            self.assertEqual(run_count, 1)
+            self.assertEqual(snapshot_count, 1)
+
+    def test_kline_detailed_analysis_returns_structured_signal(self) -> None:
+        rows = []
+        for day in range(1, 31):
+            close = 100 + day * 0.5
+            rows.append(
+                {
+                    "time": f"2026-06-{day:02d}T07:00:00Z",
+                    "trade_date": f"2026-06-{day:02d}",
+                    "open": close - 0.3,
+                    "high": close + 0.6,
+                    "low": close - 0.8,
+                    "close": close,
+                    "volume": 1000000 + day * 10000,
+                    "turnover": 100000000 + day * 1000000,
+                }
+            )
+
+        analysis = MODULE.kline_detailed_analysis(rows, {"change_rate": 1.2, "rsi14": 58.0})
+
+        self.assertIn(analysis["signal"], {"偏强", "震荡观察", "偏弱"})
+        self.assertIn("summary", analysis)
+        self.assertIn("indicators", analysis)
+        self.assertIsNotNone(analysis["support"])
+        self.assertIsNotNone(analysis["resistance"])
 
 
 if __name__ == "__main__":
