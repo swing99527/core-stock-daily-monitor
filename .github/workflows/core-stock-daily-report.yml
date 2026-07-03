@@ -91,6 +91,18 @@ jobs:
             --report-exit-code "${REPORT_EXIT_CODE:-999}" \
             --site-dir public
 
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
       - name: Publish docs site
         run: |
           set -euo pipefail
@@ -111,15 +123,3 @@ jobs:
             git commit -m "Publish core stock daily report $(date +%Y-%m-%d)"
             git push origin HEAD:main
           fi
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: public
-
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
