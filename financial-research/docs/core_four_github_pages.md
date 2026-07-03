@@ -11,7 +11,7 @@
 base64 < ~/.longbridge/openapi/cli-auth
 ```
 
-3. 新增 secret：`PAGES_PAT`。它需要有 `repo` 权限，用于 workflow 推送 `gh-pages` 并请求 Pages build。
+3. 新增 secret：`PAGES_PAT`。它需要有 `repo` 权限，用于 workflow 把生成后的 `docs/` 站点提交回 `main`。
 4. 手动运行一次 `Core stock daily report` workflow，让它创建并更新 `docs/` 站点目录。
 5. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> Deploy from a branch`，分支选 `main`，目录选 `/docs`。
 6. 确认 Pages URL 可访问。
