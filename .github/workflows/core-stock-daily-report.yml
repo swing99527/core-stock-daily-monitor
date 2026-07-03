@@ -77,6 +77,13 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
+      - name: Ensure GNU tar for Pages artifact
+        run: |
+          if ! command -v gtar >/dev/null 2>&1; then
+            brew install gnu-tar
+          fi
+          gtar --version
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
