@@ -8,10 +8,11 @@ workflow 也会把发布后的站点快照写入仓库根目录的 `docs/`，方
 
 1. 在已登录 Longbridge CLI 的 Mac 上注册仓库级 self-hosted runner。
 2. Runner 必须带有标签：`self-hosted`、`macOS`、`ARM64`、`core-stock-longbridge`。
-3. 确认 runner 服务在线，且同一用户下 `longbridge auth status --format json` 返回 `valid`。
-4. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> GitHub Actions`。
-5. 手动运行一次 `Core stock daily report` workflow，让它创建并部署 Pages 站点。
-6. 确认 Pages URL 可访问。
+3. 确认 runner 服务在线，且同一用户下 `python3 --version`、`longbridge --version` 可运行。
+4. 确认同一用户下 `longbridge auth status --format json` 返回 `valid`。
+5. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> GitHub Actions`。
+6. 手动运行一次 `Core stock daily report` workflow，让它创建并部署 Pages 站点。
+7. 确认 Pages URL 可访问。
 
 不要把本机 `~/.longbridge/openapi/cli-auth` 当作 GitHub-hosted runner 的长期 secret。该文件在 GitHub runner 上会出现 `decrypt_failed`，无法稳定生成实时报表。
 
