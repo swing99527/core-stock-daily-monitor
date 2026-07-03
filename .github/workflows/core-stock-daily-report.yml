@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: core-stock-daily-report
@@ -16,6 +18,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     env:
       TZ: Asia/Shanghai
     steps:
@@ -87,15 +92,10 @@ jobs:
             --site-dir public
 
       - name: Publish docs site
-        env:
-          PAGES_PAT: ${{ secrets.PAGES_PAT }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [ -n "${PAGES_PAT}" ]; then
-            git remote set-url origin "https://x-access-token:${PAGES_PAT}@github.com/${GITHUB_REPOSITORY}.git"
-          fi
 
           publish_dir="$(mktemp -d)"
           cp -R public/. "${publish_dir}/"
@@ -111,3 +111,15 @@ jobs:
             git commit -m "Publish core stock daily report $(date +%Y-%m-%d)"
             git push origin HEAD:main
           fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

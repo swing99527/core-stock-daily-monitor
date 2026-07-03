@@ -1,8 +1,8 @@
 # 核心股票日报 GitHub Actions / Pages 发布
 
-这个工作流把 `financial-research/scripts/core_four_daily_report.py` 作为唯一生成入口，每个工作日下午 `17:40 Asia/Shanghai` 自动运行，并把 `latest_core_four_daily_dashboard.html` 发布到仓库根目录的 `docs/` 作为 GitHub Pages 首页。
+这个工作流把 `financial-research/scripts/core_four_daily_report.py` 作为唯一生成入口，每个工作日下午 `17:40 Asia/Shanghai` 自动运行，并把 `latest_core_four_daily_dashboard.html` 通过 GitHub Actions artifact 发布为 GitHub Pages 首页。
 
-成功生成实时报表时，workflow 会把日报输出和 `docs/` 站点放在同一次提交里推回 `main`，避免连续 push 触发多次 GitHub Pages deployment。
+workflow 也会把发布后的站点快照写入仓库根目录的 `docs/`，方便审计和本地查看。成功生成实时报表时，日报输出和 `docs/` 站点会放在同一次提交里推回 `main`，避免连续 push 触发多次 GitHub Pages deployment。
 
 ## GitHub 配置
 
@@ -13,10 +13,9 @@
 base64 < ~/.longbridge/openapi/cli-auth
 ```
 
-3. 新增 secret：`PAGES_PAT`。它需要有 `repo` 权限，用于 workflow 把生成后的 `docs/` 站点提交回 `main`。
-4. 手动运行一次 `Core stock daily report` workflow，让它创建并更新 `docs/` 站点目录。
-5. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> Deploy from a branch`，分支选 `main`，目录选 `/docs`。
-6. 确认 Pages URL 可访问。
+3. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> GitHub Actions`。
+4. 手动运行一次 `Core stock daily report` workflow，让它创建并部署 Pages 站点。
+5. 确认 Pages URL 可访问。
 
 ## 失败回退
 
