@@ -6,16 +6,14 @@ workflow 也会把发布后的站点快照写入仓库根目录的 `docs/`，方
 
 ## GitHub 配置
 
-1. 在 GitHub 仓库的 `Settings -> Secrets and variables -> Actions` 新增 secret：`LONGBRIDGE_CLI_AUTH_B64`。
-2. 本机生成 secret 值：
+1. 在已登录 Longbridge CLI 的 Mac 上注册仓库级 self-hosted runner。
+2. Runner 必须带有标签：`self-hosted`、`macOS`、`ARM64`、`core-stock-longbridge`。
+3. 确认 runner 服务在线，且同一用户下 `longbridge auth status --format json` 返回 `valid`。
+4. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> GitHub Actions`。
+5. 手动运行一次 `Core stock daily report` workflow，让它创建并部署 Pages 站点。
+6. 确认 Pages URL 可访问。
 
-```bash
-base64 < ~/.longbridge/openapi/cli-auth
-```
-
-3. 在 `Settings -> Pages` 中选择 `Build and deployment -> Source -> GitHub Actions`。
-4. 手动运行一次 `Core stock daily report` workflow，让它创建并部署 Pages 站点。
-5. 确认 Pages URL 可访问。
+不要把本机 `~/.longbridge/openapi/cli-auth` 当作 GitHub-hosted runner 的长期 secret。该文件在 GitHub runner 上会出现 `decrypt_failed`，无法稳定生成实时报表。
 
 ## 失败回退
 

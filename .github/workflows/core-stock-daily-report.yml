@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64, core-stock-longbridge]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -27,6 +27,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Expose local CLI tools
+        run: |
+          echo "/opt/homebrew/bin" >> "$GITHUB_PATH"
+          echo "/usr/local/bin" >> "$GITHUB_PATH"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -34,26 +39,6 @@ jobs:
 
       - name: Run unit tests
         run: python3 -m unittest discover -s financial-research/tests
-
-      - name: Install Longbridge CLI
-        run: |
-          set -euo pipefail
-          curl -sSL https://open.longbridge.com/longbridge/longbridge-terminal/install | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          echo "/usr/local/bin" >> "$GITHUB_PATH"
-
-      - name: Restore Longbridge auth
-        env:
-          LONGBRIDGE_CLI_AUTH_B64: ${{ secrets.LONGBRIDGE_CLI_AUTH_B64 }}
-        run: |
-          set -euo pipefail
-          mkdir -p "$HOME/.longbridge/openapi"
-          if [ -z "${LONGBRIDGE_CLI_AUTH_B64}" ]; then
-            echo "::warning::Missing secret LONGBRIDGE_CLI_AUTH_B64; report generation can only succeed if Longbridge does not require auth."
-            exit 0
-          fi
-          printf '%s' "${LONGBRIDGE_CLI_AUTH_B64}" | base64 -d > "$HOME/.longbridge/openapi/cli-auth"
-          chmod 600 "$HOME/.longbridge/openapi/cli-auth"
 
       - name: Check Longbridge status
         run: |
