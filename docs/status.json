@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-09-23 00:59:40 CST",
+  "generated_at": "2026-09-23 22:25:08 CST",
   "report_date": "20260923",
-  "report_exit_code": 4,
-  "fallback_to_previous_report": true,
+  "report_exit_code": 0,
+  "fallback_to_previous_report": false,
   "latest_dashboard": "dashboard.html",
   "latest_report": "latest_core_four_daily_report.md",
-  "failure": "failure.md"
+  "failure": null
 }
